@@ -1,0 +1,376 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local config = {
+AimAssist = false,
+TeamCheck = false,
+WallCheck = false,
+FOV = false,
+FOVSize = 90
+}
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MeuHub"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local abrir = Instance.new("ImageButton")
+abrir.Size = UDim2.new(0,60,0,60)
+abrir.Position = UDim2.new(0,20,0.5,-30)
+abrir.BackgroundColor3 = Color3.fromRGB(30,30,30)
+abrir.Image = "rbxassetid://131020468565468"
+abrir.Parent = gui
+
+local abrirCorner = Instance.new("UICorner")
+abrirCorner.CornerRadius = UDim.new(1,0)
+abrirCorner.Parent = abrir
+local UIS = game:GetService("UserInputService")
+
+local dragging = false
+local dragStart
+local startPos
+
+abrir.InputBegan:Connect(function(input)
+if input.UserInputType == Enum.UserInputType.MouseButton1
+or input.UserInputType == Enum.UserInputType.Touch then
+
+dragging = true
+dragStart = input.Position
+startPos = abrir.Position
+
+input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+dragging = false
+end
+end)
+
+end
+
+end)
+
+UIS.InputChanged:Connect(function(input)
+if dragging and (
+input.UserInputType == Enum.UserInputType.MouseMovement
+or input.UserInputType == Enum.UserInputType.Touch
+) then
+local delta = input.Position - dragStart
+
+abrir.Position = UDim2.new(
+startPos.X.Scale,
+startPos.X.Offset + delta.X,
+startPos.Y.Scale,
+startPos.Y.Offset + delta.Y
+)
+end
+
+end)
+
+local hub = Instance.new("Frame")
+hub.Size = UDim2.new(0,280,0,340)
+hub.Position = UDim2.new(0.5,-140,0.5,-180)
+hub.BackgroundTransparency = 1
+hub.Visible = false
+
+hub.Parent = gui
+local bordaHub = Instance.new("UIStroke")
+bordaHub.Thickness = 3
+bordaHub.Color = Color3.fromRGB(128,0,255)
+bordaHub.Transparency = 0
+bordaHub.Parent = hub
+local fundo = Instance.new("ImageLabel")
+fundo.Size = UDim2.new(1,0,1,0)
+fundo.Position = UDim2.new(0,0,0,0)
+fundo.BackgroundTransparency = 1
+fundo.Image = "rbxassetid://131020468565468"
+fundo.ImageTransparency = 0
+fundo.ScaleType = Enum.ScaleType.Crop
+fundo.ZIndex = 1
+fundo.Parent = hub
+
+local titulo = Instance.new("TextLabel")
+titulo.Size = UDim2.new(1,0,0,30)
+titulo.Position = UDim2.new(0,0,0,0)
+titulo.BackgroundTransparency = 1
+titulo.Text = "Made By Darkness Hub v2.0"
+titulo.TextColor3 = Color3.fromRGB(255,255,255)
+titulo.TextScaled = true
+titulo.Parent = hub
+
+local function criarBotao(texto,y)
+local b = Instance.new("TextButton")
+b.Size = UDim2.new(0,220,0,40)
+b.Position = UDim2.new(0.5,-110,0,y)
+b.Text = texto
+b.Parent = hub
+return b
+end
+
+local aimButton = criarBotao("Aim Assist: OFF",30)
+local teamButton = criarBotao("Team Check: OFF",80)
+local wallButton = criarBotao("Wall Check: OFF",130)
+local fovButton = criarBotao("FOV: OFF",180)
+local espButton = criarBotao("ESP: OFF",290)
+
+local espAtivo = false
+
+local function colocarESP(plr)
+if plr ~= player and plr.Character then
+local antigo = plr.Character:FindFirstChild("MeuHighlight")
+
+if espAtivo and not antigo then
+local h = Instance.new("Highlight")
+h.Name = "MeuHighlight"
+h.FillColor = Color3.fromRGB(255,0,0)
+h.OutlineColor = Color3.fromRGB(255,255,255)
+h.Parent = plr.Character
+end
+end
+
+end
+
+local function colocarNick(plr)
+if plr ~= player and plr.Character and plr.Character:FindFirstChild("Head") then
+local antigo = plr.Character.Head:FindFirstChild("NickTag")
+
+if espAtivo and not antigo then
+local tag = Instance.new("BillboardGui")
+tag.Name = "NickTag"
+tag.Size = UDim2.new(0,150,0,15)
+tag.StudsOffset = Vector3.new(0,3,0)
+tag.AlwaysOnTop = true
+tag.Parent = plr.Character.Head
+
+local texto = Instance.new("TextLabel")
+texto.Size = UDim2.new(1,0,1,0)
+texto.BackgroundTransparency = 1
+texto.Text = plr.Name
+texto.TextColor3 = Color3.fromRGB(255,255,255)
+texto.TextScaled = true
+texto.Parent = tag
+end
+
+end
+
+end
+
+espButton.MouseButton1Click:Connect(function()
+espAtivo = not espAtivo
+espButton.Text = espAtivo and "ESP: ON" or "ESP: OFF"
+
+for _,plr in pairs(Players:GetPlayers()) do
+if espAtivo then
+colocarESP(plr)
+colocarNick(plr)
+else
+if plr.Character then
+local h = plr.Character:FindFirstChild("MeuHighlight")
+if h then
+h:Destroy()
+end
+
+local head = plr.Character:FindFirstChild("Head")
+if head then
+local tag = head:FindFirstChild("NickTag")
+if tag then
+tag:Destroy()
+end
+end
+end
+end
+
+end
+
+end)
+
+Players.PlayerAdded:Connect(function(plr)
+plr.CharacterAdded:Connect(function()
+task.wait(1)
+
+if espAtivo then
+colocarESP(plr)
+colocarNick(plr)
+end
+end)
+
+end)
+for _,plr in pairs(Players:GetPlayers()) do
+if plr ~= player then
+plr.CharacterAdded:Connect(function()
+task.wait(1)
+if espAtivo then
+colocarESP(plr)
+colocarNick(plr)
+end
+end)
+end
+end
+
+local fovBox = Instance.new("TextBox")
+fovBox.Size = UDim2.new(0,220,0,40)
+fovBox.Position = UDim2.new(0.5,-110,0,240)
+fovBox.PlaceholderText = "FOV 1-360"
+fovBox.Text = ""
+fovBox.Parent = hub
+
+-- Visual FOV
+local fovCircle = Instance.new("Frame")
+fovCircle.Size = UDim2.new(0,90,0,90)
+fovCircle.AnchorPoint = Vector2.new(0.5,0.5)
+fovCircle.Position = UDim2.new(0.5,0,0.44,0)
+fovCircle.BackgroundTransparency = 1
+fovCircle.Visible = false
+fovCircle.Parent = gui
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 3
+stroke.Color = Color3.fromRGB(128,0,255)
+stroke.Parent = fovCircle
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1,0)
+corner.Parent = fovCircle
+
+-- Abrir fechar
+abrir.MouseButton1Click:Connect(function()
+hub.Visible = not hub.Visible
+end)
+
+aimButton.MouseButton1Click:Connect(function()
+config.AimAssist = not config.AimAssist
+aimButton.Text = config.AimAssist and "Aim Assist: ON" or "Aim Assist: OFF"
+end)
+
+teamButton.MouseButton1Click:Connect(function()
+config.TeamCheck = not config.TeamCheck
+teamButton.Text = config.TeamCheck and "Team Check: ON" or "Team Check: OFF"
+end)
+
+wallButton.MouseButton1Click:Connect(function()
+config.WallCheck = not config.WallCheck
+wallButton.Text = config.WallCheck and "Wall Check: ON" or "Wall Check: OFF"
+end)
+
+fovButton.MouseButton1Click:Connect(function()
+config.FOV = not config.FOV
+fovButton.Text = config.FOV and "FOV: ON" or "FOV: OFF"
+fovCircle.Visible = config.FOV
+end)
+
+fovBox.FocusLost:Connect(function()
+local valor = tonumber(fovBox.Text)
+
+if valor and valor >= 1 and valor <= 360 then
+config.FOVSize = valor
+fovCircle.Size = UDim2.new(0,valor,0,valor)
+else
+fovBox.Text = "1-360"
+end
+
+end)
+local function mesmoTime(character)
+if not config.TeamCheck then
+return false
+end
+
+local plr = Players:GetPlayerFromCharacter(character)
+
+return plr and plr.Team == player.Team
+
+end
+
+local function bloqueado(part)
+if not config.WallCheck then
+return false
+end
+
+local origem = camera.CFrame.Position
+local direcao = part.Position - origem
+
+local params = RaycastParams.new()
+params.FilterType = Enum.RaycastFilterType.Blacklist
+params.FilterDescendantsInstances = {
+player.Character
+}
+
+local resultado = workspace:Raycast(origem, direcao, params)
+
+return resultado and not resultado.Instance:IsDescendantOf(part.Parent)
+
+end
+
+local function acharPlayer()
+local alvo
+local menor = config.FOVSize / 2
+
+local centro = Vector2.new(
+camera.ViewportSize.X / 2,
+camera.ViewportSize.Y / 2
+)
+
+for _,plr in pairs(Players:GetPlayers()) do
+
+if plr ~= player
+and plr.Character
+and plr.Character.Parent
+and plr.Character:FindFirstChild("Head")
+and plr.Character:FindFirstChild("Humanoid") then
+
+local humanoid = plr.Character.Humanoid
+
+if humanoid.Health <= 0 then
+continue
+end
+
+local head = plr.Character:FindFirstChild("Head")
+
+if not mesmoTime(plr.Character)
+and not bloqueado(head) then
+
+local pos, visivel = camera:WorldToViewportPoint(head.Position)
+
+if visivel then
+local distancia = (
+Vector2.new(pos.X,pos.Y) - centro
+).Magnitude
+
+if distancia < menor then
+menor = distancia
+alvo = head
+end
+
+end
+
+end
+
+end
+
+end
+
+return alvo
+
+end
+
+RunService.RenderStepped:Connect(function()
+if config.AimAssist then
+
+local alvo = acharPlayer()
+
+if alvo then
+local mira = CFrame.lookAt(
+camera.CFrame.Position,
+alvo.Position
+)
+
+camera.CFrame = camera.CFrame:Lerp(
+mira,
+1.00
+)
+
+end
+
+end
+
+end)
